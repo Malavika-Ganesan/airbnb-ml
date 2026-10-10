@@ -1,23 +1,55 @@
+
 import streamlit as st
 import pandas as pd
 import joblib
+from pathlib import Path
 
-MODEL_PATH = "airbnb.joblib"
-model = joblib.load(MODEL_PATH)
 
-st.set_page_config(page_title="RentHop Interest Predictor", page_icon="🏠")
+
+MODEL_PATH = Path(__file__).parent / "airbnb.joblib"
+
+st.set_page_config(
+    page_title="RentHop Interest Predictor",
+    page_icon="🏠",
+    layout="centered"
+)
 
 st.title("🏠 Rental Listing Interest Predictor")
-st.caption("Educational demonstration using the RentHop rental-listing dataset.")
+
+st.caption(
+    "Educational demonstration using a rental-listing dataset."
+)
+
+# Load model safely
+try:
+    model = joblib.load(MODEL_PATH)
+except FileNotFoundError:
+    st.error(
+        "Model file 'airbnb.joblib' was not found. "
+        "Place it in the same folder as app.py."
+    )
+    st.stop()
+except Exception as e:
+    st.error(f"Unable to load the model: {e}")
+    st.stop()
+
+
+
 
 neighbourhood_group = st.selectbox(
     "Neighbourhood Group",
-    ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"]
+    [
+        "Manhattan",
+        "Brooklyn",
+        "Queens",
+        "Bronx",
+        "Staten Island"
+    ]
 )
 
 neighbourhood = st.text_input(
     "Neighbourhood",
-    "Harlem"
+    value="Harlem"
 )
 
 room_type = st.selectbox(
@@ -90,41 +122,69 @@ days_since_review = st.number_input(
 
 description = st.text_area(
     "Rental Description",
-    "Beautiful apartment near public transportation."
+    value=(
+        "Beautiful renovated apartment with hardwood floors, "
+        "elevator, laundry and subway access."
+    )
 )
 
 
 
-description = st.text_area(
-    "Airbnb description",
-    "Beautiful renovated apartment with hardwood floors, elevator, laundry and subway access."
-)
+if st.button("Predict Interest Level", type="primary"):
 
-if st.button("Predict Interest Level"):
+    if not neighbourhood.strip():
+        st.warning("Please enter a neighbourhood.")
+        st.stop()
+
+    # These columns must match the model's training features.
     row = pd.DataFrame([{
-        "neighbourhood_group":neighbourhood_group,
-        "neighbourhood":neighbourhood,
-        "latitude":latitude,
-        "longitude":longitude,
-        "room_type":room_type,
-        "minimum_nights":minimum_nights,
-        "number_of_reviews":number_of_reviews,
-        "reviews_per_month":reviews_per_month,
-        "calculated_host_listings_count":calculated_host_listings_count,
-        "availability_365":availability_365,
-        "days_since_review":days_since_review
+        "neighbourhood_group": neighbourhood_group,
+        "neighbourhood": neighbourhood,
+        "latitude": latitude,
+        "longitude": longitude,
+        "room_type": room_type,
+        "minimum_nights": minimum_nights,
+        "number_of_reviews": number_of_reviews,
+        "reviews_per_month": reviews_per_month,
+        "calculated_host_listings_count":
+            calculated_host_listings_count,
+        "availability_365": availability_365,
+        "days_since_review": days_since_review
     }])
 
-    prediction = model.predict(row)[0]
-    probabilities = model.predict_proba(row)[0]
+    try:
+        prediction = model.predict(row)[0]
 
-    st.success(f"Predicted interest level: {str(prediction).upper()}")
+        st.success(
+            f"Predicted interest level: {str(prediction).upper()}"
+        )
 
-    probability_df = pd.DataFrame({
-        "Interest Level": model.classes_,
-        "Probability": [f"{p:.2%}" for p in probabilities]
-    })
+        # Display probabilities when supported by the model.
+        if hasattr(model, "predict_proba"):
 
-    st.table(probability_df)
+            probabilities = model.predict_proba(row)[0]
 
-st.info("Educational demonstration only. Predictions should not be treated as guaranteed market outcomes.")
+            probability_df = pd.DataFrame({
+                "Interest Level": model.classes_,
+                "Probability": [
+                    f"{p:.2%}" for p in probabilities
+                ]
+            })
+
+            st.subheader("Prediction Probabilities")
+            st.table(probability_df)
+
+        else:
+            st.info(
+                "This model does not support probability predictions."
+            )
+
+    except Exception as e:
+        st.error(f"Prediction failed: {e}")
+
+
+st.info(
+    "Educational demonstration only. Predictions are estimates, "
+    "not guaranteed market outcomes."
+)
+```
