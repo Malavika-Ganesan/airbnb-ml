@@ -4,9 +4,6 @@ import pandas as pd
 import joblib
 from pathlib import Path
 
-# ==========================================
-# 1. PAGE CONFIGURATION
-# ==========================================
 
 st.set_page_config(
     page_title="RentHop Interest Predictor",
@@ -14,9 +11,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# ==========================================
-# 2. LOAD TRAINED MODEL
-# ==========================================
+
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "airbnb.joblib"
@@ -62,10 +57,6 @@ except Exception as e:
     st.stop()
 
 
-# ==========================================
-# 3. APPLICATION TITLE
-# ==========================================
-
 st.title("🏠 Rental Listing Interest Predictor")
 
 st.caption(
@@ -79,10 +70,6 @@ st.markdown(
     """
 )
 
-
-# ==========================================
-# 4. RENTAL LISTING INPUTS
-# ==========================================
 
 st.subheader("📍 Location Details")
 
@@ -119,10 +106,6 @@ longitude = st.number_input(
 )
 
 
-# ==========================================
-# 5. ROOM DETAILS
-# ==========================================
-
 st.subheader("🏡 Room Details")
 
 room_type = st.selectbox(
@@ -141,10 +124,6 @@ minimum_nights = st.number_input(
     value=2
 )
 
-
-# ==========================================
-# 6. REVIEW DETAILS
-# ==========================================
 
 st.subheader("⭐ Review Details")
 
@@ -171,10 +150,6 @@ days_since_review = st.number_input(
 )
 
 
-# ==========================================
-# 7. HOST AND AVAILABILITY DETAILS
-# ==========================================
-
 st.subheader("👤 Host and Availability")
 
 calculated_host_listings_count = st.number_input(
@@ -192,9 +167,6 @@ availability_365 = st.number_input(
 )
 
 
-# ==========================================
-# 8. RENTAL DESCRIPTION
-# ==========================================
 
 st.subheader("📝 Rental Description")
 
@@ -213,17 +185,13 @@ st.caption(
 )
 
 
-# ==========================================
-# 9. PREDICTION
-# ==========================================
-
 if st.button("🔮 Predict Interest Level", type="primary"):
 
     if not neighbourhood.strip():
         st.warning("Please enter a neighbourhood.")
         st.stop()
 
-    # These feature names must match the training dataset.
+    
     input_data = pd.DataFrame([{
         "neighbourhood_group": neighbourhood_group,
         "neighbourhood": neighbourhood,
@@ -240,14 +208,14 @@ if st.button("🔮 Predict Interest Level", type="primary"):
     }])
 
     try:
-        # Generate prediction
+        
         prediction = model.predict(input_data)[0]
 
         st.success(
             f"Predicted Interest Level: {str(prediction).upper()}"
         )
 
-        # Show class probabilities when available
+        
         if hasattr(model, "predict_proba"):
 
             probabilities = model.predict_proba(input_data)[0]
@@ -297,9 +265,6 @@ if st.button("🔮 Predict Interest Level", type="primary"):
         )
 
 
-# ==========================================
-# 10. DISCLAIMER
-# ==========================================
 
 st.divider()
 
@@ -307,4 +272,4 @@ st.info(
     "Educational demonstration only. Predictions are estimates "
     "and should not be treated as guaranteed market outcomes."
 )
-```
+
