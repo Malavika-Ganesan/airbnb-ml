@@ -5,14 +5,34 @@ import joblib
 from pathlib import Path
 
 
-
-MODEL_PATH = Path(__file__).parent / "airbnb.joblib"
-
 st.set_page_config(
     page_title="RentHop Interest Predictor",
     page_icon="🏠",
     layout="centered"
 )
+
+
+
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "airbnb.joblib"
+
+if not MODEL_PATH.exists():
+    st.error("Model file 'airbnb.joblib' was not found.")
+    st.write("Expected location:", str(MODEL_PATH))
+    st.info(
+        "Upload airbnb.joblib to the same GitHub folder "
+        "as app1.py, then restart the Streamlit app."
+    )
+    st.stop()
+
+try:
+    model = joblib.load(MODEL_PATH)
+
+except Exception as e:
+    st.error(f"Unable to load the model: {e}")
+    st.stop()
+
+
 
 st.title("🏠 Rental Listing Interest Predictor")
 
@@ -20,21 +40,9 @@ st.caption(
     "Educational demonstration using a rental-listing dataset."
 )
 
-# Load model safely
-try:
-    model = joblib.load(MODEL_PATH)
-except FileNotFoundError:
-    st.error(
-        "Model file 'airbnb.joblib' was not found. "
-        "Place it in the same folder as app.py."
-    )
-    st.stop()
-except Exception as e:
-    st.error(f"Unable to load the model: {e}")
-    st.stop()
 
 
-
+st.subheader("Enter Rental Listing Details")
 
 neighbourhood_group = st.selectbox(
     "Neighbourhood Group",
@@ -130,13 +138,14 @@ description = st.text_area(
 
 
 
+
 if st.button("Predict Interest Level", type="primary"):
 
     if not neighbourhood.strip():
         st.warning("Please enter a neighbourhood.")
         st.stop()
 
-    # These columns must match the model's training features.
+    # Create input DataFrame
     row = pd.DataFrame([{
         "neighbourhood_group": neighbourhood_group,
         "neighbourhood": neighbourhood,
@@ -153,13 +162,14 @@ if st.button("Predict Interest Level", type="primary"):
     }])
 
     try:
+        # Generate prediction
         prediction = model.predict(row)[0]
 
         st.success(
             f"Predicted interest level: {str(prediction).upper()}"
         )
 
-        # Display probabilities when supported by the model.
+        # Display class probabilities if supported
         if hasattr(model, "predict_proba"):
 
             probabilities = model.predict_proba(row)[0]
@@ -167,7 +177,8 @@ if st.button("Predict Interest Level", type="primary"):
             probability_df = pd.DataFrame({
                 "Interest Level": model.classes_,
                 "Probability": [
-                    f"{p:.2%}" for p in probabilities
+                    f"{probability:.2%}"
+                    for probability in probabilities
                 ]
             })
 
@@ -176,15 +187,22 @@ if st.button("Predict Interest Level", type="primary"):
 
         else:
             st.info(
-                "This model does not support probability predictions."
+                "Probability estimates are not available "
+                "for this model."
             )
 
     except Exception as e:
         st.error(f"Prediction failed: {e}")
 
+        st.warning(
+            "Check whether the input columns and preprocessing "
+            "match those used when training the model."
+        )
+
+
 
 st.info(
-    "Educational demonstration only. Predictions are estimates, "
-    "not guaranteed market outcomes."
+    "Educational demonstration only. Predictions are estimates "
+    "and should not be treated as guaranteed market outcomes."
 )
 ```
