@@ -1,11 +1,12 @@
+streamlit
 pandas
+joblib
+scikit-learn
+openpyxl
 numpy
 matplotlib
 seaborn
-scikit-learn
 scipy
-joblib
 shap
 lime
-streamlit
-openpyxl
+
