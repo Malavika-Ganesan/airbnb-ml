@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-MODEL_PATH = "airbnb.joblib"
+MODEL_PATH = "airbnb2.joblib"
 model = joblib.load(MODEL_PATH)
 
 st.set_page_config(page_title="Airbnb Price Predictor", page_icon="🏠")
